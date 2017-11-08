@@ -5,14 +5,23 @@ Description: Finds coffee shops near you
 Version: 0.0.1
 Author: Taryn Greer | Jason Stallings
 */
-add_action('wp_dashboard_setup', 'my_custom_dashboard_widgets');
+add_action('wp_dashboard_setup', 'wp_coffee_dashboard_widgets');
 
-function my_custom_dashboard_widgets() {
+function wp_coffee_dashboard_widgets() {
 global $wp_meta_boxes;
 
-wp_add_dashboard_widget('custom_help_widget', 'Theme Support', 'custom_dashboard_help');
+wp_add_dashboard_widget('wp_coffee', 'WP Coffee', 'wp_coffee_dashboard_widget');
 }
 
-function custom_dashboard_help() {
-echo '<p>Welcome to Custom Blog Theme! Need help? Contact the developer <a href="mailto:yourusername@gmail.com">here</a>. For WordPress Tutorials visit: <a href="http://www.wpbeginner.com" target="_blank">WPBeginner</a></p>';
+function wp_coffee_dashboard_widget() {
+  $results = file_get_contents('https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20local.search%20where%20query=%22coffee%22%20and%20location=%22Austin,%20TX%22%20and%20Rating.AverageRating%3E=3&format=json');
+$parsed_results = json_decode($results, true);
+var_dump($parsed_results['query']['results']['Result'][0]['Title']);
+  ?>
+<p align="center"><b>Welcome to WP Coffee!</b> <br> <small><i>Find coffee shops near you.</small></i></p>
+<p> A map would probably go here. </p>
+<p> There are __ Coffee shops nearby. Here is the closest one: </p>
+<p> I can be the little google header with the rating maybe? </p>
+<marquee> COFFEE</marquee>
+<?php
 }
