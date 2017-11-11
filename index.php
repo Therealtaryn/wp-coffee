@@ -6,6 +6,11 @@ Version: 0.0.1
 Author: Taryn Greer | Jason Stallings
 */
 add_action('wp_dashboard_setup', 'wp_coffee_dashboard_widgets');
+add_action( 'admin_enqueue_scripts', 'wp_enqueue_coffee_scripts' );
+
+function wp_enqueue_coffee_scripts() {
+  wp_enqueue_style( 'wp-coffee-css', plugins_url( 'wp-coffee.css', __FILE__ ));
+}
 
 function wp_coffee_dashboard_widgets() {
 global $wp_meta_boxes;
@@ -19,6 +24,7 @@ $parsed_results = json_decode($results, true);
 $shops = $parsed_results['query']['results']['Result'];
 foreach ($shops as $shop) {
   ?>
+  <div class="wp-coffee">
   <span style="font-weight:600;">
     <a href="<?php echo $shop['BusinessUrl'];?>" target="_blank">
       <?php echo $shop['Title'];?>
@@ -31,7 +37,7 @@ foreach ($shops as $shop) {
 <?php echo $shop['Address'];?>
 </a>
   </div>
-  <hr/>
+</div>
   <?php
 }
 
