@@ -26,31 +26,40 @@ function wp_coffee_dashboard_widgets() {
 
 function wp_coffee_dashboard_widget() {
   $zipcode = get_option('wp_coffee_zipcode');
-  $url = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20local.search%20where%20query=%22coffee%22%20and%20location=%22$zipcode%22%20and%20Rating.AverageRating%3E=3&format=json";
+  $url = "https://api.foursquare.com/v2/venues/search?v=20161016&near=$zipcode&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
   $results = file_get_contents($url);
   $parsed_results = json_decode($results, true);
-  $shops = $parsed_results['query']['results']['Result'];
+  $shops = $parsed_results['response']['venues'];
+?>
+<p align="center"><b>Welcome to WP Coffee!</b> <br> <small><i>Find coffee shops near you.</small></i></p>
+<div align="center">
+  <form action="<?php echo admin_url( 'admin-post.php' );?>" method='POST'>
+  <input type='hidden' name='action' value='wp_coffee_save_zip' />
+  Zip Code: <input type='text' name='zipcode' value="<?php echo $zipcode; ?>"/>
+  <input type='submit' value='Save'/>
+</form>
+</div>
+<?php
   if (count($shops) < 1){
     echo "Sorry, no coffee shops found :(";
     $shops = array();
   }
-  else if (isset($shops['Title'])) {
+  else if (isset($shops['name'])) {
     $shops = array($shops);
   }
   foreach ($shops as $shop) {
+    $map_url = "https://www.google.com/maps/search/{$shop['name']}+{$shop['location']['address']}";
     ?>
     <div class="wp-coffee">
       <span style="font-weight:600;">
-        <a href="<?php echo $shop['BusinessUrl']; ?>" target="_blank">
-          <?php echo $shop['Title']; ?>
+        <a href="<?php echo $shop['url']; ?>" target="_blank">
+          <?php echo $shop['name']; ?>
         </a>
       </span>
       <div>
-        Rating: <?php echo $shop['Rating']['AverageRating'];?>
-        <br />
         Address:
-        <a href="<?php echo $shop['MapUrl']; ?>" target="_blank">
-          <?php echo $shop['Address']; ?>
+        <a href="<?php echo $map_url; ?>" target="_blank">
+          <?php echo $shop['location']['address']; ?>
         </a>
       </div>
     </div>
@@ -58,13 +67,6 @@ function wp_coffee_dashboard_widget() {
   }
 
   ?>
-  <p align="center"><b>Welcome to WP Coffee!</b> <br> <small><i>Find coffee shops near you.</small></i></p>
-  <form action="<?php echo admin_url( 'admin-post.php' );?>" method='POST'>
-    <input type='hidden' name='action' value='wp_coffee_save_zip' />
-    Zip Code: <input type='text' name='zipcode' value="<?php echo $zipcode; ?>"/>
-    <input type='submit' value='Save'/>
-  </form>
-
   <p> A map would probably go here. </p>
   <p> There are __ Coffee shops nearby. Here is the closest one: </p>
   <p> I can be the little google header with the rating maybe? </p>
