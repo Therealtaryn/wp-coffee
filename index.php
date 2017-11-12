@@ -25,10 +25,18 @@ function wp_coffee_dashboard_widgets() {
 }
 
 function wp_coffee_dashboard_widget() {
-  $results = file_get_contents('https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20local.search%20where%20query=%22coffee%22%20and%20location=%22Austin,%20TX%22%20and%20Rating.AverageRating%3E=3&format=json');
   $zipcode = get_option('wp_coffee_zipcode');
+  $url = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20local.search%20where%20query=%22coffee%22%20and%20location=%22$zipcode%22%20and%20Rating.AverageRating%3E=3&format=json";
+  $results = file_get_contents($url);
   $parsed_results = json_decode($results, true);
   $shops = $parsed_results['query']['results']['Result'];
+  if (count($shops) < 1){
+    echo "Sorry, no coffee shops found :(";
+    $shops = array();
+  }
+  else if (isset($shops['Title'])) {
+    $shops = array($shops);
+  }
   foreach ($shops as $shop) {
     ?>
     <div class="wp-coffee">
