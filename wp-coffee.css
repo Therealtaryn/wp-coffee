@@ -1,4 +1,19 @@
-.wp-coffee {
+.shop {
 	background-color: #fafafa;
 	border-bottom: 1px solid #eee;
+	color: #72777c;
+	margin-left: -12px;
+	margin-right: -12px;
+	padding-left: 50px;
+	padding-bottom: 12px;
+	padding-top: 12px;
+	line-height: 18px;
+
+}
+.shops div:first-child {
+	border-top:1px solid #eee;
+}
+
+.header {
+	font-weight: 600;
 }
