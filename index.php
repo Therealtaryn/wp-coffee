@@ -40,6 +40,7 @@ function wp_coffee_dashboard_widget() {
   <input type='submit' value='Save'/>
 </form>
 </div>
+<div class="shops">
 <?php
   if (count($shops) < 1){
     echo "Sorry, no coffee shops found :(";
@@ -54,26 +55,32 @@ function wp_coffee_dashboard_widget() {
     $hours_response = wp_remote_get($hours_url);
     $api_response = json_decode( wp_remote_retrieve_body( $hours_response ), true );
     $hours = get_hours($api_response)['open'][0];
-    $start = date('h:i:s A', strtotime($hours['start']));
+    $time_format = 'g:ia';
+    $start = date($time_format, strtotime($hours['start']));
+    $end = date($time_format, strtotime(str_replace("+","",$hours['end'])));
     ?>
-    <div class="wp-coffee">
-      <span style="font-weight:600;">
+    <div class="shop">
+      <span class="header">
         <a href="<?php echo $shop['url']; ?>" target="_blank">
           <?php echo $shop['name']; ?>
         </a>
       </span>
       <div>
-        <?php echo $start; ?>
-        Address:
+      <span class="header">  Address: </span>
         <a href="<?php echo $map_url; ?>" target="_blank">
           <?php echo $shop['location']['address']; ?>
         </a>
+      </div>
+      <div>
+        <span class="header">Hours:</span>
+        <?php echo $start; ?> - <?php echo $end; ?>
       </div>
     </div>
     <?php
   }
 
   ?>
+</div>
   <p> A map would probably go here. </p>
   <p> There are __ Coffee shops nearby. Here is the closest one: </p>
   <p> I can be the little google header with the rating maybe? </p>
