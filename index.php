@@ -27,7 +27,12 @@ function wp_coffee_dashboard_widgets() {
 function wp_coffee_dashboard_widget() {
   $zipcode = get_option('wp_coffee_zipcode');
   $url = "https://api.foursquare.com/v2/venues/search?v=20161016&near=$zipcode&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
+$response = get_transient( "wp_coffee_search_results_$zipcode" );
+  if ( false === $response ) {
+  // It wasn't there, so regenerate the data and save the transient
   $response = wp_remote_get($url);
+  set_transient( "wp_coffee_search_results_$zipcode", $response, DAY_IN_SECONDS );
+}
   $results = $response['body'];
   $parsed_results = json_decode($results, true);
   $shops = $parsed_results['response']['venues'];
