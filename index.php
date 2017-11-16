@@ -57,7 +57,12 @@ $response = get_transient( "wp_coffee_search_results_$zipcode" );
   foreach ($shops as $shop) {
     $map_url = "https://www.google.com/maps/search/{$shop['name']}+{$shop['location']['address']}";
     $hours_url = "https://api.foursquare.com/v2/venues/{$shop['id']}/hours?v=20161016&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
-    $hours_response = wp_remote_get($hours_url);
+    $hours_response = get_transient( "wp_coffee_hours_{$shop['id']}" );
+      if ( false === $hours_response ) {
+      // It wasn't there, so regenerate the data and save the transient
+      $hours_response = wp_remote_get($hours_url);
+      set_transient( "wp_coffee_hours_{$shop['id']}", $hours_response, 7 * DAY_IN_SECONDS );
+    }
     $api_response = json_decode( wp_remote_retrieve_body( $hours_response ), true );
     $hours = get_hours($api_response)['open'][0];
     $time_format = 'g:ia';
