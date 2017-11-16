@@ -64,10 +64,16 @@ $response = get_transient( "wp_coffee_search_results_$zipcode" );
       set_transient( "wp_coffee_hours_{$shop['id']}", $hours_response, 7 * DAY_IN_SECONDS );
     }
     $api_response = json_decode( wp_remote_retrieve_body( $hours_response ), true );
-    $hours = get_hours($api_response)['open'][0];
     $time_format = 'g:ia';
-    $start = date($time_format, strtotime($hours['start']));
-    $end = date($time_format, strtotime(str_replace("+","",$hours['end'])));
+    $hours_string = "None available :(";
+    $hours = get_hours($api_response);
+    if ($hours !== false){
+      $open = $hours['open'][0];
+      $start = date($time_format, strtotime($open['start']));
+      $end = date($time_format, strtotime(str_replace("+","",$open['end'])));
+      $hours_string = "$start - $end";
+    }
+
     ?>
     <div class="shop">
       <span class="header">
@@ -83,7 +89,7 @@ $response = get_transient( "wp_coffee_search_results_$zipcode" );
       </div>
       <div>
         <span class="header">Hours:</span>
-        <?php echo $start; ?> - <?php echo $end; ?>
+        <?php echo $hours_string; ?>
       </div>
     </div>
     <?php
@@ -99,9 +105,12 @@ $response = get_transient( "wp_coffee_search_results_$zipcode" );
 }
 
 function get_hours($body) {
+  if (empty($body['response']['hours'])) {
+    return false;
+  }
   $timeframes = $body['response']['hours']['timeframes'];
   foreach ($timeframes as $timeframe){
-    if (isset($timeframe['includesToday'])){
+    if (isset($timeframe['includesToday'])) {
       return $timeframe;
     }
   }
