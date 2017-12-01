@@ -26,6 +26,7 @@ function wp_coffee_dashboard_widgets() {
 }
 
 function wp_coffee_dashboard_widget() {
+  date_default_timezone_set( get_option('timezone_string'));
   $zipcode = get_option('wp_coffee_zipcode');
   $opennow = get_option('wp_coffee_opennow', false );
   $url = "https://api.foursquare.com/v2/venues/search?v=20161016&near=$zipcode&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
@@ -75,17 +76,25 @@ $response = get_transient( "wp_coffee_search_results_$zipcode" );
       $open = $hours['open'][0];
       $start_timestamp = strtotime($open['start']);
       $end_timestamp = strtotime(str_replace("+","",$open['end']));
+      // $end_timestamp = strtotime(str_replace("+","",$open['end']));
+      // fix issue of end time being parsed as the same day if after midnight
+      if ($open['end'][0] === "+"){
+        $end_timestamp += 86400;
+        var_dump("end time fix");
+      }
       $start = date($time_format, $start_timestamp);
       $end = date($time_format, $end_timestamp);
       $hours_string = "$start - $end";
-      if ($opennow && time() < $start_timestamp && time() > $end_timestamp){
+      $time =   time();
+      if ($opennow && ($time < $start_timestamp || $time > $end_timestamp)){
         continue;
+        //echo "CLOSED";
       }
-      date_default_timezone_set( get_option('timezone_string'));
 
-      var_dump(time());
+
       var_dump($start_timestamp);
-      var_dump($open['start']);
+      var_dump($time);
+      var_dump($end_timestamp);
     }
 
     ?>
