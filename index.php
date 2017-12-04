@@ -11,6 +11,7 @@ add_action('admin_post_wp_coffee_save_zip','wp_coffee_save_zip');
 
 function wp_coffee_save_zip() {
   update_option( 'wp_coffee_zipcode', $_POST['zipcode'], false );
+  update_option( 'wp_coffee_opennow', $_POST['opennow'], false );
   wp_redirect(admin_url('index.php'));
 }
 
@@ -25,7 +26,9 @@ function wp_coffee_dashboard_widgets() {
 }
 
 function wp_coffee_dashboard_widget() {
+  date_default_timezone_set( get_option('timezone_string'));
   $zipcode = get_option('wp_coffee_zipcode');
+  $opennow = get_option('wp_coffee_opennow', false );
   $url = "https://api.foursquare.com/v2/venues/search?v=20161016&near=$zipcode&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
 $response = get_transient( "wp_coffee_search_results_$zipcode" );
   if ( false === $response ) {
@@ -42,6 +45,8 @@ $response = get_transient( "wp_coffee_search_results_$zipcode" );
   <form action="<?php echo admin_url( 'admin-post.php' );?>" method='POST'>
   <input type='hidden' name='action' value='wp_coffee_save_zip' />
   Zip Code: <input type='text' name='zipcode' value="<?php echo $zipcode; ?>"/>
+  Open Now: <input type='checkbox' name='opennow' value="1" <?php checked( $opennow ); ?>/>
+
   <input type='submit' value='Save'/>
 </form>
 </div>
@@ -69,9 +74,20 @@ $response = get_transient( "wp_coffee_search_results_$zipcode" );
     $hours = get_hours($api_response);
     if ($hours !== false){
       $open = $hours['open'][0];
-      $start = date($time_format, strtotime($open['start']));
-      $end = date($time_format, strtotime(str_replace("+","",$open['end'])));
+      $start_timestamp = strtotime($open['start']);
+      $end_timestamp = strtotime(str_replace("+","",$open['end']));
+      // fix issue of end time being parsed as the same day if after midnight
+      if ($open['end'][0] === "+"){
+        $end_timestamp += DAY_IN_SECONDS;
+      }
+      $start = date($time_format, $start_timestamp);
+      $end = date($time_format, $end_timestamp);
       $hours_string = "$start - $end";
+      $time =   time();
+      if ($opennow && ($time < $start_timestamp || $time > $end_timestamp)){
+        continue;
+
+      }
     }
 
     ?>
