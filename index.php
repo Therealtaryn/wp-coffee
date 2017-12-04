@@ -76,11 +76,9 @@ $response = get_transient( "wp_coffee_search_results_$zipcode" );
       $open = $hours['open'][0];
       $start_timestamp = strtotime($open['start']);
       $end_timestamp = strtotime(str_replace("+","",$open['end']));
-      // $end_timestamp = strtotime(str_replace("+","",$open['end']));
       // fix issue of end time being parsed as the same day if after midnight
       if ($open['end'][0] === "+"){
-        $end_timestamp += 86400;
-        var_dump("end time fix");
+        $end_timestamp += DAY_IN_SECONDS;
       }
       $start = date($time_format, $start_timestamp);
       $end = date($time_format, $end_timestamp);
@@ -88,13 +86,8 @@ $response = get_transient( "wp_coffee_search_results_$zipcode" );
       $time =   time();
       if ($opennow && ($time < $start_timestamp || $time > $end_timestamp)){
         continue;
-        //echo "CLOSED";
+
       }
-
-
-      var_dump($start_timestamp);
-      var_dump($time);
-      var_dump($end_timestamp);
     }
 
     ?>
