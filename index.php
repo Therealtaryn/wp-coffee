@@ -32,17 +32,22 @@ function wp_coffee_dashboard_widget() {
   $zipcode = get_option('wp_coffee_zipcode');
   $opennow = get_option('wp_coffee_opennow', false );
   $ll = get_option('wp_coffee_ll' );
+  $encoded_ll = urlencode($ll);
 if($zipcode === "Current Location") {
-  $url = "https://api.foursquare.com/v2/venues/search?v=20161016&ll=$ll&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
+  $url = "https://api.foursquare.com/v2/venues/search?v=20161016&ll=$encoded_ll&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
+  var_dump($ll);
+  var_dump($url);
 }
 else{
   $url = "https://api.foursquare.com/v2/venues/search?v=20161016&near=$zipcode&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
 }
-$response = get_transient( "wp_coffee_search_results_$zipcode" );
+$transient_key = "wp_coffee_results" . md5($url);
+$response = get_transient( "wp_coffee_search_results_$url" );
+  //$response = false;
   if ( false === $response ) {
   // It wasn't there, so regenerate the data and save the transient
   $response = wp_remote_get($url);
-  set_transient( "wp_coffee_search_results_$zipcode", $response, DAY_IN_SECONDS );
+  //set_transient( "wp_coffee_search_results_$transient", $response, DAY_IN_SECONDS );
 }
   $results = $response['body'];
   $parsed_results = json_decode($results, true);
@@ -52,7 +57,7 @@ $response = get_transient( "wp_coffee_search_results_$zipcode" );
 <div align="center">
   <form action="<?php echo admin_url( 'admin-post.php' );?>" method='POST'>
   <input type='hidden' name='action' value='wp_coffee_save_zip' />
-  <input type="hidden" name="ll" id="wp-coffee-ll"/>
+  <input type="hidden" name="ll" id="wp-coffee-ll" value="<?php echo $ll; ?>"/>
   Zip Code: <input type='text' name='zipcode' id="wp-coffee-zip" value="<?php echo $zipcode; ?>"/>
   <button id="wp-coffee-geo">Geo</button>
   Open Now: <input type='checkbox' name='opennow' value="1" <?php checked( $opennow ); ?>/>
