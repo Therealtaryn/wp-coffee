@@ -17,3 +17,10 @@
 .header {
 	font-weight: 600;
 }
+
+.loading {
+	text-align: center;
+	font-weight: 600;
+	color: #0073aa;
+	font-style: italic;
+}
