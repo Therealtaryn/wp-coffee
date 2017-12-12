@@ -5,7 +5,6 @@ jQuery(function($){
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function(a) {
-        console.log(a);
         $("#wp-coffee-ll").val(a.coords.latitude+","+a.coords.longitude);
         $("#wp-coffee-zip").val("Current Location");
         $("#wp-coffee-loading").html("");
