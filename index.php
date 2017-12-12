@@ -35,8 +35,6 @@ function wp_coffee_dashboard_widget() {
   $encoded_ll = urlencode($ll);
 if($zipcode === "Current Location") {
   $url = "https://api.foursquare.com/v2/venues/search?v=20161016&ll=$encoded_ll&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
-  var_dump($ll);
-  var_dump($url);
 }
 else{
   $url = "https://api.foursquare.com/v2/venues/search?v=20161016&near=$zipcode&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
@@ -59,7 +57,8 @@ $response = get_transient( $transient_key );
   <input type='hidden' name='action' value='wp_coffee_save_zip' />
   <input type="hidden" name="ll" id="wp-coffee-ll" value="<?php echo $ll; ?>"/>
   Zip Code: <input type='text' name='zipcode' id="wp-coffee-zip" value="<?php echo $zipcode; ?>"/>
-  <button id="wp-coffee-geo">Geo</button>
+  <input type=button id="wp-coffee-geo" value="Near Me"/>
+  <!-- <button id="wp-coffee-geo">Geo</button> -->
   Open Now: <input type='checkbox' name='opennow' value="1" <?php checked( $opennow ); ?>/>
 
   <input type='submit' value='Save'/>
