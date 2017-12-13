@@ -9,6 +9,9 @@ jQuery(function($){
         $("#wp-coffee-zip").val("Current Location");
         $("#wp-coffee-loading").html("");
         $("#wp-coffee-submit").submit();
+      }, function(error){
+        alert(error.message);
+        $("#wp-coffee-loading").html("");
       });
     } else {
       alert('navigator.geolocation not supported.');

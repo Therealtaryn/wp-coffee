@@ -23,7 +23,7 @@ function wp_enqueue_coffee_scripts() {
 
 function wp_coffee_dashboard_widgets() {
   global $wp_meta_boxes;
-  
+
   wp_add_dashboard_widget('wp_coffee', 'WP Coffee', 'wp_coffee_dashboard_widget');
 }
 
@@ -37,12 +37,12 @@ function wp_coffee_dashboard_widget() {
       Zip Code: <input type='text' name='zipcode' id="wp-coffee-zip" value="<?php echo $zipcode; ?>"/>
       <input type=button id="wp-coffee-geo" value="Near Me"/>
       Open Now: <input type='checkbox' name='opennow' value="1" <?php checked( $opennow ); ?>/>
-      
+
       <input type='submit' value='Save'/>
     </form>
   </div>
   <div id="wp-coffee-loading" class="loading">
-    
+
   </div>
   <?php
   date_default_timezone_set( get_option('timezone_string'));
@@ -58,7 +58,7 @@ function wp_coffee_dashboard_widget() {
   }
   $transient_key = "wp_coffee_results" . md5($url);
   $response = get_transient( $transient_key );
-  $response = false;
+  //$response = false;
   if ( false === $response ) {
     // It wasn't there, so regenerate the data and save the transient
     $response = wp_remote_get($url);
@@ -73,7 +73,7 @@ function wp_coffee_dashboard_widget() {
   $parsed_results = json_decode($results, true);
   $shops = $parsed_results['response']['venues'];
   ?>
-  
+
   <div class="shops">
     <?php
     if (count($shops) < 1){
@@ -110,10 +110,10 @@ function wp_coffee_dashboard_widget() {
         $time =   time();
         if ($opennow && ($time < $start_timestamp || $time > $end_timestamp)){
           continue;
-          
+
         }
       }
-      
+
       ?>
       <div class="shop">
         <span class="header">
@@ -134,7 +134,7 @@ function wp_coffee_dashboard_widget() {
       </div>
       <?php
     }
-    
+
     ?>
   </div>
   <p> A map would probably go here. </p>
