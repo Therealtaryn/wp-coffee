@@ -28,108 +28,115 @@ function wp_coffee_dashboard_widgets() {
 }
 
 function wp_coffee_dashboard_widget() {
+  ?>
+  <p align="center"><b>Welcome to WP Coffee!</b> <br> <small><i>Find coffee shops near you.</small></i></p>
+  <div align="center">
+    <form action="<?php echo admin_url( 'admin-post.php' );?>" method='POST' id="wp-coffee-submit">
+      <input type='hidden' name='action' value='wp_coffee_save_zip' />
+      <input type="hidden" name="ll" id="wp-coffee-ll" value="<?php echo $ll; ?>"/>
+      Zip Code: <input type='text' name='zipcode' id="wp-coffee-zip" value="<?php echo $zipcode; ?>"/>
+      <input type=button id="wp-coffee-geo" value="Near Me"/>
+      Open Now: <input type='checkbox' name='opennow' value="1" <?php checked( $opennow ); ?>/>
+
+      <input type='submit' value='Save'/>
+    </form>
+  </div>
+  <div id="wp-coffee-loading" class="loading">
+
+  </div>
+  <?php
   date_default_timezone_set( get_option('timezone_string'));
   $zipcode = get_option('wp_coffee_zipcode');
   $opennow = get_option('wp_coffee_opennow', false );
   $ll = get_option('wp_coffee_ll' );
   $encoded_ll = urlencode($ll);
-if($zipcode === "Current Location") {
-  $url = "https://api.foursquare.com/v2/venues/search?v=20161016&ll=$encoded_ll&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
-}
-else{
-  $url = "https://api.foursquare.com/v2/venues/search?v=20161016&near=$zipcode&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
-}
-$transient_key = "wp_coffee_results" . md5($url);
-$response = get_transient( $transient_key );
+  if($zipcode === "Current Location") {
+    $url = "https://api.foursquare.com/v2/venues/search?v=20161016&ll=$encoded_ll&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
+  }
+  else{
+    $url = "https://api.foursquare.com/v2/venues/search?v=20161016&near=$zipcode&query=coffee&intent=checkin&limit=5&sortByDistance=1&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
+  }
+  $transient_key = "wp_coffee_results" . md5($url);
+  $response = get_transient( $transient_key );
   //$response = false;
   if ( false === $response ) {
-  // It wasn't there, so regenerate the data and save the transient
-  $response = wp_remote_get($url);
-  set_transient( $transient_key, $response, DAY_IN_SECONDS );
-}
+    // It wasn't there, so regenerate the data and save the transient
+    $response = wp_remote_get($url);
+    if ( is_wp_error( $response ) ) {
+      $error_string = $response->get_error_message();
+      echo 'Oops! Something went wrong. Please try again :(<br/>' . $error_string;
+      return;
+    }
+    set_transient( $transient_key, $response, DAY_IN_SECONDS );
+  }
   $results = $response['body'];
   $parsed_results = json_decode($results, true);
   $shops = $parsed_results['response']['venues'];
-?>
-<p align="center"><b>Welcome to WP Coffee!</b> <br> <small><i>Find coffee shops near you.</small></i></p>
-<div align="center">
-  <form action="<?php echo admin_url( 'admin-post.php' );?>" method='POST' id="wp-coffee-submit">
-  <input type='hidden' name='action' value='wp_coffee_save_zip' />
-  <input type="hidden" name="ll" id="wp-coffee-ll" value="<?php echo $ll; ?>"/>
-  Zip Code: <input type='text' name='zipcode' id="wp-coffee-zip" value="<?php echo $zipcode; ?>"/>
-  <input type=button id="wp-coffee-geo" value="Near Me"/>
-  <!-- <button id="wp-coffee-geo">Geo</button> -->
-  Open Now: <input type='checkbox' name='opennow' value="1" <?php checked( $opennow ); ?>/>
+  ?>
 
-  <input type='submit' value='Save'/>
-</form>
-</div>
-<div id="wp-coffee-loading" class="loading">
-
-</div>
-<div class="shops">
-<?php
-  if (count($shops) < 1){
-    echo "Sorry, no coffee shops found :(";
-    $shops = array();
-  }
-  else if (isset($shops['name'])) {
-    $shops = array($shops);
-  }
-  foreach ($shops as $shop) {
-    $map_url = "https://www.google.com/maps/search/{$shop['name']}+{$shop['location']['address']}";
-    $hours_url = "https://api.foursquare.com/v2/venues/{$shop['id']}/hours?v=20161016&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
-    $hours_response = get_transient( "wp_coffee_hours_{$shop['id']}" );
-      if ( false === $hours_response ) {
-      // It wasn't there, so regenerate the data and save the transient
-      $hours_response = wp_remote_get($hours_url);
-      set_transient( "wp_coffee_hours_{$shop['id']}", $hours_response, 7 * DAY_IN_SECONDS );
+  <div class="shops">
+    <?php
+    if (count($shops) < 1){
+      echo "Sorry, no coffee shops found :(";
+      $shops = array();
     }
-    $api_response = json_decode( wp_remote_retrieve_body( $hours_response ), true );
-    $time_format = 'g:ia';
-    $hours_string = "None available :(";
-    $hours = get_hours($api_response);
-    if ($hours !== false){
-      $open = $hours['open'][0];
-      $start_timestamp = strtotime($open['start']);
-      $end_timestamp = strtotime(str_replace("+","",$open['end']));
-      // fix issue of end time being parsed as the same day if after midnight
-      if ($open['end'][0] === "+"){
-        $end_timestamp += DAY_IN_SECONDS;
+    else if (isset($shops['name'])) {
+      $shops = array($shops);
+    }
+    foreach ($shops as $shop) {
+      $map_url = "https://www.google.com/maps/search/{$shop['name']}+{$shop['location']['address']}";
+      $hours_url = "https://api.foursquare.com/v2/venues/{$shop['id']}/hours?v=20161016&client_id=MWI1A5GEEYFGDY5ZO23DUFO4NEFJE1XUG3FIUMMKOEORBFKH&client_secret=DUQKLSMGTN5TYWWGSK5F5KOMLX4VME0XKJY3RKFHXS15EGGA";
+      $hours_response = get_transient( "wp_coffee_hours_{$shop['id']}" );
+      if ( false === $hours_response ) {
+        // It wasn't there, so regenerate the data and save the transient
+        $hours_response = wp_remote_get($hours_url);
+        set_transient( "wp_coffee_hours_{$shop['id']}", $hours_response, 7 * DAY_IN_SECONDS );
       }
-      $start = date($time_format, $start_timestamp);
-      $end = date($time_format, $end_timestamp);
-      $hours_string = "$start - $end";
-      $time =   time();
-      if ($opennow && ($time < $start_timestamp || $time > $end_timestamp)){
-        continue;
+      $api_response = json_decode( wp_remote_retrieve_body( $hours_response ), true );
+      $time_format = 'g:ia';
+      $hours_string = "None available :(";
+      $hours = get_hours($api_response);
+      if ($hours !== false){
+        $open = $hours['open'][0];
+        $start_timestamp = strtotime($open['start']);
+        $end_timestamp = strtotime(str_replace("+","",$open['end']));
+        // fix issue of end time being parsed as the same day if after midnight
+        if ($open['end'][0] === "+"){
+          $end_timestamp += DAY_IN_SECONDS;
+        }
+        $start = date($time_format, $start_timestamp);
+        $end = date($time_format, $end_timestamp);
+        $hours_string = "$start - $end";
+        $time =   time();
+        if ($opennow && ($time < $start_timestamp || $time > $end_timestamp)){
+          continue;
 
+        }
       }
+
+      ?>
+      <div class="shop">
+        <span class="header">
+          <a href="<?php echo $shop['url']; ?>" target="_blank">
+            <?php echo $shop['name']; ?>
+          </a>
+        </span>
+        <div>
+          <span class="header">  Address: </span>
+          <a href="<?php echo $map_url; ?>" target="_blank">
+            <?php echo $shop['location']['address']; ?>
+          </a>
+        </div>
+        <div>
+          <span class="header">Hours:</span>
+          <?php echo $hours_string; ?>
+        </div>
+      </div>
+      <?php
     }
 
     ?>
-    <div class="shop">
-      <span class="header">
-        <a href="<?php echo $shop['url']; ?>" target="_blank">
-          <?php echo $shop['name']; ?>
-        </a>
-      </span>
-      <div>
-      <span class="header">  Address: </span>
-        <a href="<?php echo $map_url; ?>" target="_blank">
-          <?php echo $shop['location']['address']; ?>
-        </a>
-      </div>
-      <div>
-        <span class="header">Hours:</span>
-        <?php echo $hours_string; ?>
-      </div>
-    </div>
-    <?php
-  }
-
-  ?>
-</div>
+  </div>
   <p> A map would probably go here. </p>
   <p> There are __ Coffee shops nearby. Here is the closest one: </p>
   <p> I can be the little google header with the rating maybe? </p>
